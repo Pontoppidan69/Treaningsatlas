@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Træningsatlas v4 – Weighted Highlights + Refined Sketch</title>
+<meta name="theme-color" content="#0f1115">
+<style>
+:root{
+  --bg:#0f1115; --panel:#141a25; --ink:#e9edf5; --muted:#9aa3b2;
+  --border:#24314a; --chip:#0d1324;
+  --hot:#ff5e5e;   /* primær */
+  --mid:#ffd166;   /* sekundær */
+  --low:#5ecbff;   /* tertiær */
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  background:radial-gradient(1200px 600px at 80% -120px,#1b2240 0%,#0f1115 60%);
+  color:var(--ink);
+}
+.wrap{max-width:1260px; margin:20px auto 64px; padding:0 16px}
+header{display:grid; gap:8px; margin-bottom:14px}
+h1{margin:0;font-size:28px;letter-spacing:.2px}
+.sub{color:var(--muted);font-size:14px}
+
+.grid{display:grid;grid-template-columns:380px 1fr; gap:16px}
+@media (max-width:980px){ .grid{grid-template-columns:1fr} }
+
+.card{
+  background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.0));
+  border:1px solid var(--border); border-radius:14px; padding:14px;
+  backdrop-filter:blur(8px); box-shadow:0 10px 30px rgba(0,0,0,.25);
+}
+h2{font-size:18px;margin:0 0 8px 0}
+.section{display:grid;gap:10px}
+
+.search{display:flex;gap:8px;align-items:center;background:#0d1324;border:1px solid var(--border);border-radius:12px;padding:8px 10px}
+.search input{border:none;background:transparent;outline:none;color:var(--ink);width:100%}
+.btn{border:1px solid var(--border);background:#0d1324;color:var(--ink);padding:8px 10px;border-radius:10px;cursor:pointer;font-size:13px}
+.btn:active{transform:translateY(1px)}
+.badge{font-size:12px;padding:3px 8px;border-radius:999px;background:#0d1324;border:1px solid var(--border);color:var(--muted)}
+
+.exlist{display:grid;gap:6px; max-height:540px; overflow:auto; padding-right:4px}
+.ex{display:grid;grid-template-columns:auto 1fr auto; gap:10px; align-items:center; background:var(--chip); border:1px solid var(--border); border-radius:12px; padding:8px 10px}
+.ex input{transform:scale(1.2)}
+.ex .name{font-weight:600}
+.ex .notes{font-size:12px;color:var(--muted)}
+
+.viewer{display:grid;grid-template-columns:1fr; gap:12px}
+.canvas{
+  display:grid; grid-template-columns:1fr 1fr; gap:12px; align-items:center; justify-items:center;
+}
+@media (max-width:860px){ .canvas{grid-template-columns:1fr} }
+.svgwrap{
+  width:100%; max-width:520px; aspect-ratio:3/4; border:1px dashed var(--border); border-radius:14px; padding:6px;
+  display:grid; place-items:center; background:rgba(255,255,255,.02);
+}
+svg{width:100%; height:100%}
+.sil{fill:#0e172a; stroke:#24314a; stroke-width:1}
+.guides .line{stroke:#1e2a46; stroke-width:.6; opacity:.25}
+.muscle{fill:#162035; stroke:#2a3b66; stroke-width:1; transition:filter .2s, opacity .2s}
+.muscle.dim{opacity:.18}
+.muscle[data-int="1"].active{ fill:var(--low); filter: drop-shadow(0 0 6px rgba(94,203,255,.45)); }
+.muscle[data-int="2"].active{ fill:var(--mid); filter: drop-shadow(0 0 6px rgba(255,209,102,.45)); }
+.muscle[data-int="3"].active{ fill:var(--hot); filter: drop-shadow(0 0 6px rgba(255,94,94,.55)); }
+.muscle:hover{stroke:#9fe7ba;stroke-width:1.4; cursor:help}
+
+.legend{display:flex; gap:12px; flex-wrap:wrap; align-items:center}
+.legend .sw{width:14px;height:14px;border-radius:4px;border:1px solid #2a3b66}
+.sw.low{background:var(--low)} .sw.mid{background:var(--mid)} .sw.hot{background:var(--hot)}
+.legend small{color:var(--muted)}
+
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+@media (max-width:900px){ .kpis{grid-template-columns:repeat(2,1fr)} }
+@media (max-width:560px){ .kpis{grid-template-columns:1fr} }
+.kpi{background:#0d1324;border:1px solid var(--border);border-radius:12px;padding:10px}
+.kpi .t{font-size:12px;color:var(--muted)}
+.kpi .v{font-size:18px;font-weight:700}
+
+.form{display:grid;grid-template-columns:repeat(6,1fr); gap:8px; align-items:end}
+@media (max-width:1100px){ .form{grid-template-columns:repeat(3,1fr)} }
+@media (max-width:560px){ .form{grid-template-columns:1fr 1fr} }
+.field{display:grid;gap:6px}
+.field label{font-size:12px;color:var(--muted)}
+.field input, .field select{
+  width:100%; padding:8px 10px; border-radius:10px; border:1px solid var(--border); background:#0d1324; color:var(--ink);
+}
+
+.note{font-size:12px;color:var(--muted);margin-top:8px}
+small{color:var(--muted)}
+
+.tooltip{
+  position:fixed; pointer-events:none; z-index:50;
+  background:#0d1324; border:1px solid var(--border); color:var(--ink);
+  padding:6px 8px; border-radius:8px; font-size:12px; display:none;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+}
+
+hr{border:none;border-top:1px solid var(--border); margin:8px 0}
+.footer{color:var(--muted); font-size:12px; margin-top:10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Træningsatlas v4</h1>
+    <div class="sub">Mere anatomisk skitse, mere præcise muskler og **farvekodet intensitet** (rød=primær, gul=sekundær, blå=tertiær). Tooltip-navne når du peger.</div>
+  </header>
+
+  <div class="grid">
+    <aside class="card">
+      <h2>Øvelser</h2>
+      <div class="section">
+        <div class="search">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          <input id="q" placeholder="Søg øvelse... (fx 'hack squat', 'rear delt')" />
+          <button class="btn" id="clearSel">Nulstil valg</button>
+        </div>
+        <div class="exlist" id="exlist"></div>
+        <div class="note">Vælg flere øvelser for at se samlet arbejde for en hel træningsdag. Farver prioriterer primære (rød), sekundære (gul), støtte (blå).</div>
+      </div>
+    </aside>
+
+    <main class="card viewer">
+      <div class="canvas">
+        <div class="svgwrap">
+          <!-- FRONT refined -->
+          <svg id="front" viewBox="0 0 280 380" aria-label="Forfra kropsskitse">
+            <defs>
+              <clipPath id="clipFront"><path d="M140 10c-20 0-34 14-34 32v16c0 9-5 15-12 22-13 13-20 32-20 52v44c0 8-4 14-10 20-10 10-14 24-12 38l10 62c3 14 12 24 26 28l42 14c9 3 19 3 28 0l42-14c14-4 23-14 26-28l10-62c2-14-2-28-12-38-6-6-10-12-10-20v-44c0-20-7-39-20-52-7-7-12-13-12-22V42c0-18-14-32-34-32z"/></clipPath>
+            </defs>
+            <g class="guides" clip-path="url(#clipFront)">
+              <line class="line" x1="140" y1="0" x2="140" y2="380"/>
+            </g>
+            <path class="sil" d="M140 10c-20 0-34 14-34 32v16c0 9-5 15-12 22-13 13-20 32-20 52v44c0 8-4 14-10 20-10 10-14 24-12 38l10 62c3 14 12 24 26 28l42 14c9 3 19 3 28 0l42-14c14-4 23-14 26-28l10-62c2-14-2-28-12-38-6-6-10-12-10-20v-44c0-20-7-39-20-52-7-7-12-13-12-22V42c0-18-14-32-34-32z"/>
+            <!-- pecs split with better shape -->
+            <g id="f-pec-upper" class="muscle" data-name="Pectoralis (øvre)"><path d="M80 90c18-10 38-18 60-18s42 8 60 18c2 10 0 18-6 26-22 8-36 10-54-2-18 12-32 10-54 2-6-8-8-16-6-26z"/></g>
+            <g id="f-pec-lower" class="muscle" data-name="Pectoralis (nedre)"><path d="M88 116c-6 6-6 14-2 22 20 14 34 18 54 18s34-4 54-18c4-8 4-16-2-22-20 8-34 12-52 12s-32-4-52-12z"/></g>
+            <!-- delts -->
+            <g id="f-delt-ant" class="muscle" data-name="Deltoid (front)"><path d="M60 96c-8 6-12 18-10 28 2 10 10 18 20 22 10-2 18-8 24-18s8-22 2-32c-10-4-24-4-36 0zM220 96c8 6 12 18 10 28-2 10-10 18-20 22-10-2-18-8-24-18s-8-22-2-32c10-4 24-4 36 0z"/></g>
+            <g id="f-delt-lat" class="muscle" data-name="Deltoid (mid)"><path d="M66 134c-4 6-4 14 0 20 6 8 16 12 26 12 6-6 10-12 12-20s0-16-4-22c-12-2-24 2-34 10zM214 134c4 6 4 14 0 20-6 8-16 12-26 12-6-6-10-12-12-20s0-16 4-22c12-2 24 2 34 10z"/></g>
+            <!-- arms -->
+            <g id="f-biceps-long" class="muscle" data-name="Biceps (long head)"><path d="M64 158c-10 8-12 24-8 36 2 8 10 12 18 14 10-2 16-8 20-18 4-12 2-24-6-34-10-2-18 0-24 2zM216 158c10 8 12 24 8 36-2 8-10 12-18 14-10-2-16-8-20-18-4-12-2-24 6-34 10-2 18 0 24 2z"/></g>
+            <g id="f-biceps-short" class="muscle" data-name="Biceps (short head)"><path d="M72 166c-6 6-8 16-4 26 4 6 10 10 16 12 6-2 10-6 12-12 2-8 0-16-4-22-6-2-12-4-20-4zM208 166c6 6 8 16 4 26-4 6-10 10-16 12-6-2-10-6-12-12-2-8 0-16 4-22 6-2 12-4 20-4z"/></g>
+            <g id="f-forearm" class="muscle" data-name="Underarm"><path d="M52 196c-8 10-8 24-4 36 4 8 10 12 18 14 8 0 14-4 18-10 2-10 0-22-6-32-8-2-16-4-26-8zM228 196c8 10 8 24 4 36-4 8-10 12-18 14-8 0-14-4-18-10-2-10 0-22 6-32 8-2 16-4 26-8z"/></g>
+            <!-- core -->
+            <g id="f-abs" class="muscle" data-name="Rectus abdominis"><path d="M120 134c-8 6-12 14-12 24v48c0 8 6 16 12 22 6 4 16 4 22 0 8-6 12-14 12-22v-48c0-10-4-18-12-24-6-4-16-4-22 0z"/></g>
+            <g id="f-obliq" class="muscle" data-name="Obliques"><path d="M92 148c-10 6-16 16-16 28v24c10 8 20 12 30 14 2-10 2-20 2-30 0-14-4-26-16-36zM188 148c10 6 16 16 16 28v24c-10 8-20 12-30 14-2-10-2-20-2-30 0-14 4-26 16-36z"/></g>
+            <!-- legs -->
+            <g id="f-quad-rect" class="muscle" data-name="Rectus femoris"><path d="M124 220c-10 8-14 18-14 30v36c8 6 16 8 24 8s16-2 24-8v-36c0-12-4-22-14-30-4-2-10-2-20 0z"/></g>
+            <g id="f-quad-lat" class="muscle" data-name="Vastus lateralis"><path d="M96 212c-14 8-22 20-24 36l8 40c6 10 14 18 26 20l16-6 8-48c-2-16-12-30-34-42zM184 212c14 8 22 20 24 36l-8 40c-6 10-14 18-26 20l-16-6-8-48c2-16 12-30 34-42z"/></g>
+            <g id="f-quad-med" class="muscle" data-name="Vastus medialis"><path d="M118 258c-8 4-14 10-18 18l6 22c8 4 16 6 24 6v-30c-4-4-8-10-12-16zM162 258c8 4 14 10 18 18l-6 22c-8 4-16 6-24 6v-30c4-4 8-10 12-16z"/></g>
+            <g id="f-adductors" class="muscle" data-name="Adductors"><path d="M110 236c-10 8-16 18-16 30v28c10 8 20 12 30 14v-50c-4-6-8-14-14-22zM170 236c10 8 16 18 16 30v28c-10 8-20 12-30 14v-50c4-6 8-14 14-22z"/></g>
+            <g id="f-tibialis" class="muscle" data-name="Tibialis anterior"><path d="M104 314c-8 6-12 14-10 24l8 22c8 2 16 2 24 0l6-18-6-18c-8-2-14-6-22-10zM176 314c8 6 12 14 10 24l-8 22c-8 2-16 2-24 0l-6-18 6-18c8-2 14-6 22-10z"/></g>
+          </svg>
+        </div>
+
+        <div class="svgwrap">
+          <!-- BACK refined -->
+          <svg id="back" viewBox="0 0 280 380" aria-label="Bagfra kropsskitse">
+            <defs>
+              <clipPath id="clipBack"><path d="M140 10c-20 0-34 14-34 32v16c0 9-5 15-12 22-13 13-20 32-20 52v44c0 8-4 14-10 20-10 10-14 24-12 38l10 62c3 14 12 24 26 28l42 14c9 3 19 3 28 0l42-14c14-4 23-14 26-28l10-62c2-14-2-28-12-38-6-6-10-12-10-20v-44c0-20-7-39-20-52-7-7-12-13-12-22V42c0-18-14-32-34-32z"/></clipPath>
+            </defs>
+            <g class="guides" clip-path="url(#clipBack)">
+              <line class="line" x1="140" y1="0" x2="140" y2="380"/>
+            </g>
+            <path class="sil" d="M140 10c-20 0-34 14-34 32v16c0 9-5 15-12 22-13 13-20 32-20 52v44c0 8-4 14-10 20-10 10-14 24-12 38l10 62c3 14 12 24 26 28l42 14c9 3 19 3 28 0l42-14c14-4 23-14 26-28l10-62c2-14-2-28-12-38-6-6-10-12-10-20v-44c0-20-7-39-20-52-7-7-12-13-12-22V42c0-18-14-32-34-32z"/>
+            <!-- traps split -->
+            <g id="b-traps-up" class="muscle" data-name="Trapezius (øvre)"><path d="M92 72c-12 6-24 12-28 22 2 8 8 14 18 18 18 6 34 6 58 6s40 0 58-6c10-4 16-10 18-18-4-10-16-16-28-22-12 6-28 10-48 10s-36-4-48-10z"/></g>
+            <g id="b-traps-mid" class="muscle" data-name="Trapezius (midterste)"><path d="M96 104c-10 6-16 12-18 20 6 8 16 12 30 14 10 2 22 2 32 2s22 0 32-2c14-2 24-6 30-14-2-8-8-14-18-20-12 6-28 10-44 10s-32-4-44-10z"/></g>
+            <g id="b-traps-low" class="muscle" data-name="Trapezius (nedre)"><path d="M108 130c-8 6-12 12-12 20 8 8 22 12 44 12s36-4 44-12c0-8-4-14-12-20-10 6-20 8-32 8s-22-2-32-8z"/></g>
+            <g id="b-delts-post" class="muscle" data-name="Deltoid (rear)"><path d="M58 104c-10 8-14 18-12 30 2 10 10 18 20 22 12-2 20-10 26-20s8-22 2-32c-12-4-24-4-36 0zM222 104c10 8 14 18 12 30-2 10-10 18-20 22-12-2-20-10-26-20s-8-22-2-32c12-4 24-4 36 0z"/></g>
+            <g id="b-rhomboids" class="muscle" data-name="Rhomboids"><path d="M104 108c-8 6-12 12-12 20 10 8 22 12 48 12s38-4 48-12c0-8-4-14-12-20-12 6-24 8-36 8s-24-2-36-8z"/></g>
+            <g id="b-lats" class="muscle" data-name="Latissimus dorsi"><path d="M80 130c-10 10-14 22-14 36v20c10 12 24 20 38 24l24 6v-74c-16-2-32-6-48-12zM200 130c10 10 14 22 14 36v20c-10 12-24 20-38 24l-24 6v-74c16-2 32-6 48-12z"/></g>
+            <g id="b-erectors" class="muscle" data-name="Erector spinae"><path d="M124 142c-8 6-12 12-12 22v54c6 6 14 10 22 12v-74c-4-4-6-8-10-14zM156 142c8 6 12 12 12 22v54c-6 6-14 10-22 12v-74c4-4 6-8 10-14z"/></g>
+
+            <g id="b-tri-long" class="muscle" data-name="Triceps (long head)"><path d="M58 140c-10 8-12 22-8 34 4 10 10 16 20 18 10-2 16-8 20-18 4-10 2-22-6-32-12-2-20 0-26 2zM222 140c10 8 12 22 8 34-4 10-10 16-20 18-10-2-16-8-20-18-4-10-2-22 6-32 12-2 20 0 26 2z"/></g>
+            <g id="b-tri-lat" class="muscle" data-name="Triceps (lateral head)"><path d="M68 148c-6 6-8 14-4 22 4 6 10 10 16 12 6-2 10-6 12-12 2-6 0-12-4-18-6-2-12-4-20-4zM212 148c6 6 8 14 4 22-4 6-10 10-16 12-6-2-10-6-12-12-2-6 0-12 4-18 6-2 12-4 20-4z"/></g>
+            <g id="b-tri-med" class="muscle" data-name="Triceps (medial head)"><path d="M66 168c-4 6-4 12 0 18 4 4 8 6 12 8 4-2 6-4 8-8 2-4 2-8 0-12-6-2-12-4-20-6zM214 168c4 6 4 12 0 18-4 4-8 6-12 8-4-2-6-4-8-8-2-4-2-8 0-12 6-2 12-4 20-6z"/></g>
+
+            <g id="b-glutes" class="muscle" data-name="Glutes"><path d="M100 210c-14 8-22 18-22 32l8 24c16 8 34 12 54 12s38-4 54-12l8-24c0-14-8-24-22-32-20 8-40 10-60 10s-40-2-60-10z"/></g>
+            <g id="b-ham-bf" class="muscle" data-name="Hamstrings (biceps femoris)"><path d="M96 236c-12 8-18 18-18 30l8 32c8 12 18 20 30 22l14-8 2-50c-4-12-14-20-36-26zM184 236c12 8 18 18 18 30l-8 32c-8 12-18 20-30 22l-14-8-2-50c4-12 14-20 36-26z"/></g>
+            <g id="b-ham-semi" class="muscle" data-name="Hamstrings (semigr.)"><path d="M114 244c-10 8-14 16-14 26l4 30c8 8 16 14 24 16l8-6v-44c-4-8-10-14-22-22zM166 244c10 8 14 16 14 26l-4 30c-8 8-16 14-24 16l-8-6v-44c4-8 10-14 22-22z"/></g>
+
+            <g id="b-calves-med" class="muscle" data-name="Gastrocnemius (medial)"><path d="M104 314c-10 6-16 14-14 24l8 24c8 4 16 6 26 6l6-16-6-20c-8-2-14-8-20-18zM176 314c10 6 16 14 14 24l-8 24c-8 4-16 6-26 6l-6-16 6-20c8-2 14-8 20-18z"/></g>
+            <g id="b-calves-lat" class="muscle" data-name="Gastrocnemius (lateral)"><path d="M96 310c-8 6-12 12-10 20l6 18c6 4 12 6 18 8l6-14-6-16c-6-2-10-6-14-16zM184 310c8 6 12 12 10 20l-6 18c-6 4-12 6-18 8l-6-14 6-16c6-2 10-6 14-16z"/></g>
+          </svg>
+        </div>
+      </div>
+
+      <div class="legend">
+        <span class="sw hot"></span><small>Primær (rød)</small>
+        <span class="sw mid"></span><small>Sekundær (gul)</small>
+        <span class="sw low"></span><small>Støtte/tertiær (blå)</small>
+      </div>
+
+      <hr/>
+
+      <section>
+        <h2>Kcal & Protein beregner</h2>
+        <div class="form">
+          <div class="field"><label for="sex">Køn</label>
+            <select id="sex"><option value="m">Mand</option><option value="f">Kvinde</option></select>
+          </div>
+          <div class="field"><label for="age">Alder</label><input id="age" type="number" min="10" max="100" value="19"></div>
+          <div class="field"><label for="height">Højde (cm)</label><input id="height" type="number" min="120" max="230" value="180"></div>
+          <div class="field"><label for="weight">Vægt (kg)</label><input id="weight" type="number" min="30" max="200" value="65"></div>
+          <div class="field"><label for="activity">Aktivitetsniveau</label>
+            <select id="activity">
+              <option value="1.2">Lav (stillesiddende)</option>
+              <option value="1.375">Let aktiv (1-3 træninger/uge)</option>
+              <option value="1.55" selected>Middel (3-5 træninger/uge)</option>
+              <option value="1.725">Høj (daglig hård træning)</option>
+              <option value="1.9">Meget høj (fysisk arbejde + træning)</option>
+            </select>
+          </div>
+          <div class="field"><label for="goal">Mål</label>
+            <select id="goal">
+              <option value="maintain">Vedligehold</option>
+              <option value="leanbulk" selected>Lean bulk (+250)</option>
+              <option value="bulk">Bulk (+500)</option>
+              <option value="cut">Cut (-300)</option>
+            </select>
+          </div>
+          <button class="btn" id="calc">Beregn</button>
+          <button class="btn" id="save">Gem</button>
+          <button class="btn" id="load">Hent gemte</button>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><div class="t">BMR (Mifflin-St Jeor)</div><div class="v" id="bmr">–</div></div>
+          <div class="kpi"><div class="t">TDEE (vedligehold)</div><div class="v" id="tdee">–</div></div>
+          <div class="kpi"><div class="t">Kalorier (mål)</div><div class="v" id="kcals">–</div></div>
+          <div class="kpi"><div class="t">Proteinmål</div><div class="v" id="protein">–</div></div>
+        </div>
+        <div class="note">Protein: vedligehold 1.6–2.0 g/kg; <b>lean bulk 2.0–2.2</b> g/kg; <b>bulk ca. 2.0</b> g/kg; cut 2.2–2.6 g/kg.</div>
+      </section>
+      <div class="footer">Bygget til Sander – offline, ingen tracking. Anatomien er forenklet, men alignet bedre efter virkelige konturer.</div>
+    </main>
+  </div>
+</div>
+
+<div id="tooltip" class="tooltip"></div>
+
+<script>
+// Tooltip
+const tip = document.getElementById('tooltip');
+function showTip(text, x, y){ tip.textContent=text; tip.style.left=(x+12)+'px'; tip.style.top=(y+12)+'px'; tip.style.display='block'; }
+function hideTip(){ tip.style.display='none'; }
+function wireTooltips(){
+  document.querySelectorAll('.muscle').forEach(el=>{
+    const name = el.dataset.name || el.id;
+    el.addEventListener('mousemove', e=>showTip(name, e.clientX, e.clientY));
+    el.addEventListener('mouseleave', hideTip);
+  });
+}
+
+// Muscle ids
+const MUSCLES = new Set([
+  "f-pec-upper","f-pec-lower","f-delt-ant","f-delt-lat","f-biceps-long","f-biceps-short","f-forearm","f-abs","f-obliq","f-quad-rect","f-quad-lat","f-quad-med","f-adductors","f-tibialis",
+  "b-traps-up","b-traps-mid","b-traps-low","b-delts-post","b-rhomboids","b-lats","b-erectors","b-tri-long","b-tri-lat","b-tri-med","b-glutes","b-ham-bf","b-ham-semi","b-calves-med","b-calves-lat"
+]);
+
+// Exercises with weighted muscles: 3=primær (rød), 2=sekundær (gul), 1=tertiær (blå)
+const EXERCISES = [
+  {name:"Incline Dumbbell Press", group:"Bryst/Skuldre/Triceps", muscles:[
+    ["f-pec-upper",3],["f-delt-ant",2],["b-tri-long",2],["b-tri-lat",1]
+  ]},
+  {name:"Flat Dumbbell Press", group:"Bryst/Skuldre/Triceps", muscles:[
+    ["f-pec-lower",3],["f-delt-ant",2],["b-tri-long",2],["b-tri-lat",1]
+  ]},
+  {name:"Incline Cable Fly", group:"Bryst (øvre)", muscles:[["f-pec-upper",3],["f-delt-ant",1]]},
+  {name:"Dumbbell Fly", group:"Bryst (nedre/mid)", muscles:[["f-pec-lower",3],["f-delt-ant",1]]},
+  {name:"Machine Chest Press", group:"Maskine – Bryst", muscles:[["f-pec-lower",3],["f-delt-ant",2],["b-tri-long",2]]},
+  {name:"Pec Deck / Machine Fly", group:"Maskine – Bryst", muscles:[["f-pec-lower",3],["f-pec-upper",2]]},
+
+  {name:"Cable Pushdown", group:"Triceps", muscles:[["b-tri-lat",3],["b-tri-med",2]]},
+  {name:"Overhead Triceps Extension", group:"Triceps", muscles:[["b-tri-long",3],["b-tri-med",1]]},
+  {name:"Skull Crushers", group:"Triceps", muscles:[["b-tri-long",3],["b-tri-lat",2]]},
+  {name:"Close-Grip Bench", group:"Bryst/Triceps", muscles:[["b-tri-long",3],["b-tri-lat",2],["f-pec-lower",1]]},
+
+  {name:"Lat Pulldown", group:"Ryg – lodret træk", muscles:[["b-lats",3],["b-rhomboids",2],["b-traps-mid",1],["b-delts-post",1]]},
+  {name:"Pull-ups", group:"Ryg – kropsvægt", muscles:[["b-lats",3],["b-rhomboids",2],["b-traps-mid",1],["b-delts-post",1]]},
+  {name:"Seated Cable Row", group:"Ryg – vandret træk", muscles:[["b-rhomboids",3],["b-traps-mid",2],["b-lats",1],["b-delts-post",1]]},
+  {name:"Machine Row", group:"Maskine – Ryg", muscles:[["b-rhomboids",3],["b-traps-mid",2],["b-lats",1],["b-delts-post",1]]},
+  {name:"Barbell Row", group:"Ryg – fri vægt", muscles:[["b-rhomboids",3],["b-traps-mid",2],["b-traps-low",1],["b-lats",1],["b-erectors",2],["b-delts-post",1]]},
+  {name:"Face Pull", group:"Bagskulder/Øvre ryg", muscles:[["b-delts-post",3],["b-rhomboids",2],["b-traps-up",1],["b-traps-mid",1]]},
+
+  {name:"Military Press", group:"Skuldre/Triceps", muscles:[["f-delt-ant",3],["b-tri-long",2],["b-tri-lat",1],["b-traps-up",1]]},
+  {name:"Dumbbell Lateral Raise", group:"Skuldre (midterste)", muscles:[["f-delt-lat",3],["b-delts-post",1]]},
+  {name:"Front Raise", group:"Skuldre (front)", muscles:[["f-delt-ant",3]]},
+  {name:"Cable Lateral Raise", group:"Skuldre (midterste)", muscles:[["f-delt-lat",3],["b-delts-post",1]]},
+  {name:"Reverse Pec Deck", group:"Bagskulder", muscles:[["b-delts-post",3],["b-rhomboids",2],["b-traps-mid",1]]},
+
+  {name:"Face Away Bayesian Curl", group:"Biceps", muscles:[["f-biceps-long",3],["f-forearm",1]]},
+  {name:"Dumbbell Preacher Curl", group:"Biceps", muscles:[["f-biceps-short",3],["f-forearm",1]]},
+  {name:"Hammer Curl", group:"Brachialis/Underarm", muscles:[["f-biceps-long",2],["f-forearm",2]]},
+
+  {name:"Back Squat (high-bar)", group:"Ben – squat", muscles:[["f-quad-rect",3],["f-quad-lat",2],["f-quad-med",2],["b-glutes",2],["b-ham-bf",1]]},
+  {name:"Front Squat", group:"Ben – squat", muscles:[["f-quad-rect",3],["f-quad-lat",2],["f-quad-med",2],["b-glutes",1]]},
+  {name:"Smith Squat", group:"Maskine – squat", muscles:[["f-quad-rect",3],["f-quad-lat",2],["f-quad-med",2],["b-glutes",1]]},
+  {name:"Leg Press (45°)", group:"Maskine – ben", muscles:[["f-quad-lat",3],["f-quad-med",3],["f-quad-rect",2],["b-glutes",2],["b-ham-bf",1]]},
+  {name:"Bulgarian Split Squat", group:"Unilateralt – ben", muscles:[["f-quad-lat",3],["f-quad-med",3],["b-glutes",2],["b-ham-bf",1],["f-adductors",1]]},
+  {name:"Hack Squat", group:"Maskine – ben", muscles:[["f-quad-lat",3],["f-quad-med",3],["f-quad-rect",2],["b-glutes",1]]},
+  {name:"Hip Thrust", group:"Glutes", muscles:[["b-glutes",3],["b-ham-semi",1]]},
+  {name:"Romanian Deadlift (RDL)", group:"Hoftehængsel", muscles:[["b-ham-bf",3],["b-ham-semi",3],["b-glutes",2],["b-erectors",2]]},
+  {name:"Stiff-Leg Deadlift", group:"Hoftehængsel", muscles:[["b-ham-bf",3],["b-ham-semi",3],["b-glutes",2],["b-erectors",2]]},
+  {name:"Seated Leg Curl", group:"Maskine – baglår", muscles:[["b-ham-bf",3],["b-ham-semi",3]]},
+  {name:"Lying Leg Curl", group:"Maskine – baglår", muscles:[["b-ham-bf",3],["b-ham-semi",3]]},
+  {name:"Leg Extension", group:"Maskine – forside lår", muscles:[["f-quad-rect",3],["f-quad-lat",2],["f-quad-med",2]]},
+  {name:"Adductor Machine", group:"Maskine – inderlår", muscles:[["f-adductors",3]]},
+  {name:"Abductor (Glute med.)", group:"Maskine – ydre hofte", muscles:[["b-glutes",2]]},
+  {name:"Cable Kickback", group:"Glutes", muscles:[["b-glutes",3]]},
+  {name:"Standing Calf Raise", group:"Læg", muscles:[["b-calves-med",3],["b-calves-lat",3]]},
+  {name:"Seated Calf Raise", group:"Læg", muscles:[["b-calves-med",3],["b-calves-lat",3]]},
+
+  {name:"Plank", group:"Core", muscles:[["f-abs",2],["f-obliq",2],["b-erectors",1]]},
+  {name:"Hanging Leg Raise", group:"Core", muscles:[["f-abs",3]]}
+];
+
+// UI
+const $q = document.getElementById('q');
+const $list = document.getElementById('exlist');
+const selected = new Set();
+
+function renderList(){
+  const term = $q.value.trim().toLowerCase();
+  $list.innerHTML="";
+  EXERCISES.filter(e => e.name.toLowerCase().includes(term) || e.group.toLowerCase().includes(term))
+  .forEach(e => {
+    const row = document.createElement("label");
+    row.className="ex";
+    const cb = document.createElement("input");
+    cb.type="checkbox"; cb.checked = selected.has(e.name);
+    cb.addEventListener("change", ()=>{ if(cb.checked) selected.add(e.name); else selected.delete(e.name); highlight(); });
+    const body = document.createElement("div");
+    const nm = document.createElement("div"); nm.className="name"; nm.textContent=e.name;
+    const nt = document.createElement("div"); nt.className="notes"; nt.textContent=e.group;
+    body.appendChild(nm); body.appendChild(nt);
+    const badge = document.createElement("div"); badge.className="badge"; badge.textContent = e.muscles.length+" mål";
+    row.appendChild(cb); row.appendChild(body); row.appendChild(badge);
+    $list.appendChild(row);
+  });
+}
+$q.addEventListener("input", renderList);
+document.getElementById("clearSel").addEventListener("click", ()=>{
+  selected.clear(); document.querySelectorAll(".ex input[type=checkbox]").forEach(c=>c.checked=false); highlight();
+});
+
+// Highlight logic with intensity
+function clearActive(){
+  document.querySelectorAll('.muscle').forEach(n=>{ n.classList.remove('active','dim'); n.removeAttribute('data-int'); });
+}
+function highlight(){
+  clearActive();
+  if(selected.size===0) return;
+  // combine weights: choose max intensity among exercises for a muscle
+  const map = new Map(); // id -> maxWeight
+  for(const ex of EXERCISES){
+    if(!selected.has(ex.name)) continue;
+    for(const [id,w] of ex.muscles){
+      if(!MUSCLES.has(id)) continue;
+      const cur = map.get(id)||0;
+      if(w>cur) map.set(id,w);
+    }
+  }
+  // apply
+  document.querySelectorAll('.muscle').forEach(n=>{
+    const id = n.id;
+    if(map.has(id)){ n.dataset.int = map.get(id); n.classList.add('active'); }
+    else { n.classList.add('dim'); }
+  });
+}
+
+// Calculator
+const $sex = document.getElementById("sex");
+const $age = document.getElementById("age");
+const $height = document.getElementById("height");
+const $weight = document.getElementById("weight");
+const $activity = document.getElementById("activity");
+const $goal = document.getElementById("goal");
+const $bmr = document.getElementById("bmr");
+const $tdee = document.getElementById("tdee");
+const $kcals = document.getElementById("kcals");
+const $protein = document.getElementById("protein");
+
+function calc(){
+  const sex = $sex.value, age=+($age.value||0), h=+($height.value||0), w=+($weight.value||0), act=+($activity.value||1), goal=$goal.value;
+  const bmr = sex==="m" ? (10*w + 6.25*h - 5*age + 5) : (10*w + 6.25*h - 5*age - 161);
+  const tdee = bmr * act;
+  let target = tdee; if(goal==="leanbulk") target+=250; if(goal==="bulk") target+=500; if(goal==="cut") target-=300;
+  let gpk=1.8; if(goal==="leanbulk") gpk=2.1; if(goal==="bulk") gpk=2.0; if(goal==="cut") gpk=2.4;
+  const protein = gpk * w;
+  $bmr.textContent = Math.round(bmr)+" kcal"; $tdee.textContent=Math.round(tdee)+" kcal"; $kcals.textContent=Math.round(target)+" kcal"; $protein.textContent=Math.round(protein)+" g/dag ("+gpk.toFixed(1)+" g/kg)";
+}
+document.getElementById("calc").addEventListener("click", calc);
+["change","input"].forEach(ev=>[$sex,$age,$height,$weight,$activity,$goal].forEach(el=>el.addEventListener(ev, calc)));
+
+// Save/load
+document.getElementById("save").addEventListener("click", ()=>{
+  const payload = {sex:$sex.value,age:$age.value,height:$height.value,weight:$weight.value,activity:$activity.value,goal:$goal.value,selected:[...selected]};
+  localStorage.setItem("sander_atlas_v4", JSON.stringify(payload)); alert("Gemt ✔️");
+});
+document.getElementById("load").addEventListener("click", ()=>{
+  const raw = localStorage.getItem("sander_atlas_v4"); if(!raw){ alert("Ingen gemte data."); return; }
+  try{ const d=JSON.parse(raw);
+    $sex.value=d.sex; $age.value=d.age; $height.value=d.height; $weight.value=d.weight; $activity.value=d.activity; $goal.value=d.goal;
+    selected.clear(); (d.selected||[]).forEach(n=>selected.add(n));
+    renderList(); document.querySelectorAll(".ex input[type=checkbox]").forEach(cb=>{ const name=cb.parentElement.querySelector(".name")?.textContent; if(name && selected.has(name)) cb.checked=true; });
+    calc(); highlight(); alert("Hentet ✔️");
+  } catch(e){ alert("Kunne ikke læse gemte data."); }
+});
+
+// Start
+window.addEventListener("load", ()=>{ renderList(); calc(); wireTooltips(); });
+</script>
+</body>
+</html>
