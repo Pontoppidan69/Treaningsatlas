@@ -1,0 +1,9 @@
+{
+  "name": "Træningsatlas v4",
+  "short_name": "Atlas v4",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "description": "Interaktivt træningsatlas med farvekodede muskler",
+  "icons": []
+}
